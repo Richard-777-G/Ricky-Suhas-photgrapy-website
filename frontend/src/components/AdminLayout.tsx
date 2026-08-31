@@ -35,7 +35,7 @@ export default function AdminLayout({ children, title, subtitle }: AdminLayoutPr
 
   const handleLogout = () => {
     localStorage.removeItem('rs_admin_user');
-    navigate('/admin');
+    navigate('/');
   };
 
   return (

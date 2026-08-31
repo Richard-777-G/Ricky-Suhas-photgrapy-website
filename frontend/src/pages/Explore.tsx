@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { apiGet } from '@/lib/api';
 import type { Media } from '@/types';
 import { Search, Camera, Film, Play, MapPin, Sparkles } from 'lucide-react';
+import { AnimatedHeading } from '@/components/Motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import SpatialPhotoModal from '@/components/SpatialPhotoModal';
@@ -66,9 +67,12 @@ export default function Explore() {
             <Sparkles className="w-3.5 h-3.5" />
             <span>Master Digital Visual Archive</span>
           </div>
-          <h1 className="font-serif text-4xl sm:text-6xl font-light text-foreground tracking-tight">
-            Explore Creation
-          </h1>
+          <AnimatedHeading
+            text="Explore Creation"
+            accentFrom={1}
+            testId="page-title"
+            className="font-serif text-4xl sm:text-6xl lg:text-7xl font-light text-foreground tracking-tight leading-[1.05]"
+          />
           <p className="text-sm text-muted-foreground max-w-xl">
             Filter through high-resolution photography, 4K film trailers, and vertical expeditions chronicled by Ricky Suhas.
           </p>
@@ -148,13 +152,13 @@ export default function Explore() {
                   else if (isReel) setSelectedReel(item);
                   else setSelectedPhoto(item);
                 }}
-                className="group relative rounded-2xl overflow-hidden bg-card border border-border/40 hover:border-[#D4AF37] transition-all cursor-pointer shadow-md hover:shadow-2xl flex flex-col"
+                className="group relative rounded-2xl overflow-hidden bg-card border border-border/40 hover:border-[#D4AF37] transition-colors duration-500 cursor-pointer shadow-md hover:shadow-2xl flex flex-col"
               >
                 <div className={`relative w-full overflow-hidden ${isReel ? 'aspect-[9/16]' : 'aspect-[16/11]'}`}>
                   <img
                     src={item.thumbnail_url || item.file_url}
                     alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1400ms] ease-out"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-70 group-hover:opacity-90 transition-opacity" />
 

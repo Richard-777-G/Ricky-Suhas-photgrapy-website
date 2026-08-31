@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, ChevronLeft, ChevronRight, MapPin, Layers, Camera, Maximize2 } from 'lucide-react';
 import type { Media } from '@/types';
 import { Link } from 'react-router-dom';
+import { useLockBodyScroll } from '@/components/Motion';
 
 interface SpatialPhotoModalProps {
   media: Media | null;
@@ -20,6 +21,7 @@ export default function SpatialPhotoModal({
 }: SpatialPhotoModalProps) {
   const [showExif, setShowExif] = useState(false);
   const [isZoomed, setIsZoomed] = useState(false);
+  useLockBodyScroll(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiGet } from '@/lib/api';
 import type { Collection } from '@/types';
 import { Layers, MapPin, ArrowRight } from 'lucide-react';
+import { AnimatedHeading } from '@/components/Motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -23,9 +24,12 @@ export default function Collections() {
             <Layers className="w-4 h-4" />
             <span>Curated Expedition Bodies of Work</span>
           </div>
-          <h1 className="font-serif text-4xl sm:text-6xl font-light text-foreground tracking-tight">
-            Thematic Collections
-          </h1>
+          <AnimatedHeading
+            text="Thematic Collections"
+            accentFrom={1}
+            testId="page-title"
+            className="font-serif text-4xl sm:text-6xl lg:text-7xl font-light text-foreground tracking-tight leading-[1.05]"
+          />
           <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
             Each collection represents a multi-year expedition into unique ecosystems, studying the interplay between light, elevation, and atmospheric moisture.
           </p>
@@ -38,12 +42,12 @@ export default function Collections() {
               key={col.id}
               to={`/collections/${col.id}`}
               data-testid={`collection-item-${col.id}`}
-              className="group relative rounded-3xl overflow-hidden border border-border/40 hover:border-[#D4AF37] transition-all bg-card shadow-xl flex flex-col justify-end aspect-[16/11]"
+              className="group relative rounded-3xl overflow-hidden border border-border/40 hover:border-[#D4AF37]/70 transition-colors duration-500 bg-card shadow-xl flex flex-col justify-end aspect-[16/11]"
             >
               <img
                 src={col.cover_image_url}
                 alt={col.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1600ms] ease-out"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/40 to-transparent" />
 

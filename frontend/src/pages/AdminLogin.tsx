@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { apiPost } from '@/lib/api';
 import type { LoginResponse } from '@/types';
-import { Shield, Lock, Mail, ArrowRight } from 'lucide-react';
+import { Shield, Lock, Mail, ArrowRight, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function AdminLogin() {
@@ -40,6 +40,16 @@ export default function AdminLogin() {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#050607] via-[#050607]/80 to-[#050607]/60" />
       </div>
+
+      {/* Return to public site */}
+      <Link
+        to="/"
+        data-testid="admin-back-to-site-link"
+        className="absolute top-6 left-6 z-20 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/20 bg-black/50 backdrop-blur-md text-xs font-mono uppercase tracking-wider text-white/80 hover:text-[#D4AF37] hover:border-[#D4AF37] transition-colors duration-300"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        <span>Back to Site</span>
+      </Link>
 
       {/* Login Card */}
       <div className="relative z-10 w-full max-w-md p-8 sm:p-10 rounded-3xl bg-[#0C0E12]/90 border border-[#D4AF37]/30 backdrop-blur-2xl shadow-2xl space-y-6">

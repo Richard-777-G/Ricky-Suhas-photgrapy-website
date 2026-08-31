@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { apiGet } from '@/lib/api';
 import type { Story } from '@/types';
 import { BookOpen, Calendar, ArrowRight } from 'lucide-react';
+import { AnimatedHeading } from '@/components/Motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
@@ -23,9 +24,12 @@ export default function Stories() {
             <BookOpen className="w-4 h-4" />
             <span>Field Notes & Expedition Journal</span>
           </div>
-          <h1 className="font-serif text-4xl sm:text-6xl font-light text-foreground tracking-tight">
-            Stories of Creation
-          </h1>
+          <AnimatedHeading
+            text="Stories of Creation"
+            accentFrom={1}
+            testId="page-title"
+            className="font-serif text-4xl sm:text-6xl lg:text-7xl font-light text-foreground tracking-tight leading-[1.05]"
+          />
           <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
             Personal chronicles written during expeditions—exploring sub-zero dawns, high-altitude monasteries, and monsoon rain percussion.
           </p>
@@ -45,7 +49,7 @@ export default function Stories() {
                   <img
                     src={story.cover_image_url}
                     alt={story.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1400ms] ease-out"
                   />
                   <div className="absolute top-3 left-3 px-3 py-1 rounded-full text-[10px] font-mono bg-black/70 border border-white/20 text-[#D4AF37]">
                     {story.read_time}

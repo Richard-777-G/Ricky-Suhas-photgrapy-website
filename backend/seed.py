@@ -390,8 +390,8 @@ async def seed_database():
             "slug": "guardian-of-the-wet-grasslands",
             "description": "Emerging from pre-dawn fog in Kaziranga, an Indian one-horned rhinoceros grazing in dew-soaked elephant grass.",
             "short_description": "A prehistoric silhouette emerges from morning river fog along the Brahmaputra floodplain.",
-            "file_url": "https://images.unsplash.com/photo-1549223565-49541e8416dc?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
-            "thumbnail_url": "https://images.unsplash.com/photo-1549223565-49541e8416dc?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
+            "file_url": "https://images.unsplash.com/photo-1564760055775-d63b17a55c44?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400",
+            "thumbnail_url": "https://images.unsplash.com/photo-1564760055775-d63b17a55c44?crop=entropy&cs=srgb&fm=jpg&q=85&w=800",
             "width": 3840,
             "height": 2560,
             "capture_date": "January 2025",
@@ -520,7 +520,7 @@ async def seed_database():
         {
             "id": "reel_monsoon_drop",
             "type": "reel",
-            "title": "5:30 AM in the Cloud Canopy 🌧️",
+            "title": "5:30 AM in the Cloud Canopy",
             "slug": "530-am-in-the-cloud-canopy",
             "description": "Take a moment to listen to the rain. Raw audio recorded in the high ridges of Wayanad.",
             "short_description": "Waking up before dawn as dense mountain mist engulfs the forest treehouse.",
@@ -542,7 +542,7 @@ async def seed_database():
         {
             "id": "reel_spiti_timelapse",
             "type": "reel",
-            "title": "Milky Way Rising Over Key Monastery ✨",
+            "title": "Milky Way Rising Over Key Monastery",
             "slug": "milky-way-rising-over-key-monastery",
             "description": "Zero light pollution at 4,000 meters altitude. 600 RAW frames compressed into pure cosmic motion.",
             "short_description": "Cosmic time-lapse tracking the galactic core over the ancient 1000-year Key Monastery.",
@@ -564,7 +564,7 @@ async def seed_database():
         {
             "id": "reel_percussion_nature",
             "type": "reel",
-            "title": "Percussion x Mountain Echoes 🥁",
+            "title": "Percussion x Mountain Echoes",
             "slug": "percussion-x-mountain-echoes",
             "description": "Recording handpan and organic rhythms live overlooking the valley at sunset. When nature joins the rhythm.",
             "short_description": "Harmonizing acoustic handpan grooves with evening birdsong and valley winds.",
@@ -585,7 +585,7 @@ async def seed_database():
         {
             "id": "reel_varkala_sunset_wave",
             "type": "reel",
-            "title": "The Golden Swell in Slow Motion 🌊",
+            "title": "The Golden Swell in Slow Motion",
             "slug": "the-golden-swell-in-slow-motion",
             "description": "Watch until the end for the light refraction through the crest.",
             "short_description": "Pure amber light refracting through sunset ocean spray along Varkala beach.",

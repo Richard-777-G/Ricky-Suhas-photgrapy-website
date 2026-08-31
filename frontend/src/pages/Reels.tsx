@@ -4,6 +4,7 @@ import { apiGet } from '@/lib/api';
 import type { Media } from '@/types';
 import { Play, MapPin } from 'lucide-react';
 import { Instagram } from '@/components/SocialIcons';
+import { AnimatedHeading } from '@/components/Motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import VerticalReelPlayer from '@/components/VerticalReelPlayer';
@@ -27,9 +28,12 @@ export default function Reels() {
             <Instagram className="w-4 h-4" />
             <span>Vertical Expeditions & Nature Reels</span>
           </div>
-          <h1 className="font-serif text-4xl sm:text-6xl font-light text-foreground tracking-tight">
-            Moments & Reels
-          </h1>
+          <AnimatedHeading
+            text="Moments & Reels"
+            accentFrom={1}
+            testId="page-title"
+            className="font-serif text-4xl sm:text-6xl lg:text-7xl font-light text-foreground tracking-tight leading-[1.05]"
+          />
           <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
             Short-form vertical visual journeys and field recordings straight from Ricky's Instagram feed (@rickysuhas).
           </p>
@@ -42,12 +46,12 @@ export default function Reels() {
               key={reel.id}
               data-testid={`reel-feed-card-${reel.id}`}
               onClick={() => setSelectedReel(reel)}
-              className="group relative aspect-[9/16] rounded-3xl overflow-hidden bg-card border border-border/40 hover:border-[#D4AF37] transition-all cursor-pointer shadow-xl flex flex-col justify-between p-4"
+              className="group relative aspect-[9/16] rounded-3xl overflow-hidden bg-card border border-border/40 hover:border-[#D4AF37] transition-colors duration-500 cursor-pointer shadow-xl flex flex-col justify-between p-4"
             >
               <img
                 src={reel.thumbnail_url || reel.file_url}
                 alt={reel.title}
-                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1400ms] ease-out"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-black/40" />
 

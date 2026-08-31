@@ -9,6 +9,8 @@ import Footer from '@/components/Footer';
 import SpatialPhotoModal from '@/components/SpatialPhotoModal';
 import CinematicFilmModal from '@/components/CinematicFilmModal';
 import VerticalReelPlayer from '@/components/VerticalReelPlayer';
+import AmbientScore from '@/components/AmbientScore';
+import { AnimatedHeading } from '@/components/Motion';
 
 export default function CollectionDetail() {
   const { id } = useParams<{ id: string }>();
@@ -104,16 +106,19 @@ export default function CollectionDetail() {
             )}
           </div>
 
-          <h1
-            data-testid="collection-detail-title"
-            className="font-serif text-3xl sm:text-5xl lg:text-6xl font-light text-white tracking-tight"
-          >
-            {collection.title}
-          </h1>
+          <AnimatedHeading
+            text={collection.title}
+            testId="collection-detail-title"
+            className="font-serif text-3xl sm:text-5xl lg:text-6xl font-light text-white tracking-tight leading-[1.05]"
+          />
 
-          <p className="text-sm sm:text-base text-[#F2F0EA]/90 max-w-3xl leading-relaxed">
+          <p className="text-sm sm:text-base text-[#F2F0EA]/85 max-w-3xl leading-relaxed">
             {collection.description}
           </p>
+
+          <div className="pt-2" data-testid="collection-ambient-score">
+            <AmbientScore category={collection.category} collectionTitle={collection.title} />
+          </div>
         </div>
       </section>
 

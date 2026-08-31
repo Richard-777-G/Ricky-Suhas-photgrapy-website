@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiGet } from '@/lib/api';
 import type { Media } from '@/types';
 import { Film, Play, Clock, MapPin } from 'lucide-react';
+import { AnimatedHeading } from '@/components/Motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import CinematicFilmModal from '@/components/CinematicFilmModal';
@@ -26,9 +27,12 @@ export default function Films() {
             <Film className="w-4 h-4" />
             <span>4K Cinema & Acoustic Documentaries</span>
           </div>
-          <h1 className="font-serif text-4xl sm:text-6xl font-light text-foreground tracking-tight">
-            Cinematic Films
-          </h1>
+          <AnimatedHeading
+            text="Cinematic Films"
+            accentFrom={1}
+            testId="page-title"
+            className="font-serif text-4xl sm:text-6xl lg:text-7xl font-light text-foreground tracking-tight leading-[1.05]"
+          />
           <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
             High frame-rate 4K documentary films accompanied by location-recorded acoustic percussion and nature soundscapes.
           </p>
@@ -41,12 +45,12 @@ export default function Films() {
               key={film.id}
               data-testid={`film-card-${film.id}`}
               onClick={() => setSelectedFilm(film)}
-              className="group relative rounded-3xl overflow-hidden bg-card border border-border/40 hover:border-[#D4AF37] transition-all cursor-pointer shadow-xl flex flex-col aspect-[16/10]"
+              className="group relative rounded-3xl overflow-hidden bg-card border border-border/40 hover:border-[#D4AF37] transition-colors duration-500 cursor-pointer shadow-xl flex flex-col aspect-[16/10]"
             >
               <img
                 src={film.thumbnail_url || film.file_url}
                 alt={film.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1600ms] ease-out"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent" />
 

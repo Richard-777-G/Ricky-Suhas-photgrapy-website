@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { apiGet } from '@/lib/api';
 import type { Location, Media } from '@/types';
 import { Compass, Play } from 'lucide-react';
+import { AnimatedHeading } from '@/components/Motion';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import InteractiveMap from '@/components/InteractiveMap';
@@ -50,9 +51,12 @@ export default function Places() {
             <Compass className="w-4 h-4" />
             <span>Geographical Dimensions & Expeditions</span>
           </div>
-          <h1 className="font-serif text-4xl sm:text-6xl font-light text-foreground tracking-tight">
-            Places & Topography
-          </h1>
+          <AnimatedHeading
+            text="Places & Topography"
+            accentFrom={1}
+            testId="page-title"
+            className="font-serif text-4xl sm:text-6xl lg:text-7xl font-light text-foreground tracking-tight leading-[1.05]"
+          />
           <p className="text-sm text-muted-foreground max-w-2xl leading-relaxed">
             Ricky treats geography as a first-class dimension. Explore high-altitude passes, ancient rainforests, and coastal cliffs categorized by exact GPS coordinates.
           </p>
@@ -93,12 +97,12 @@ export default function Places() {
                       else if (isReel) setSelectedReel(item);
                       else setSelectedPhoto(item);
                     }}
-                    className="group relative rounded-2xl overflow-hidden bg-card border border-border/40 hover:border-[#D4AF37] transition-all cursor-pointer shadow-lg aspect-[16/11]"
+                    className="group relative rounded-2xl overflow-hidden bg-card border border-border/40 hover:border-[#D4AF37] transition-colors duration-500 cursor-pointer shadow-lg aspect-[16/11]"
                   >
                     <img
                       src={item.thumbnail_url || item.file_url}
                       alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[1400ms] ease-out"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 

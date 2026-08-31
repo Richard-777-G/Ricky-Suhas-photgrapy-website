@@ -17,7 +17,7 @@ export default function Footer() {
               <span className="w-2 h-2 rounded-full bg-[#D4AF37]" />
             </div>
             <p className="text-sm font-serif italic text-[#D4AF37] tracking-wide">
-              "Beauty Seeker — Take a moment to enjoy God's creation 🌍"
+              "Beauty Seeker — Take a moment to enjoy God's creation"
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
               An evolving cinematic archive of places, nature, photography, film, and percussion rhythms. Preserving the sacred stillness of the wilderness across the high Himalayas, Western Ghats, and coastal frontiers.

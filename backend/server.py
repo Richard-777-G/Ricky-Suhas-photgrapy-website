@@ -26,6 +26,7 @@ from routers.settings import router as settings_router
 from routers.inquiries import router as inquiries_router
 from routers.uploads import router as uploads_router
 from routers.ai_assist import router as ai_assist_router
+from routers.discovery import router as discovery_router
 
 
 # Startup runs before the yield, shutdown after it.
@@ -92,6 +93,7 @@ api_router.include_router(settings_router)
 api_router.include_router(inquiries_router)
 api_router.include_router(uploads_router)
 api_router.include_router(ai_assist_router)
+api_router.include_router(discovery_router)
 
 # Include the main router in the app
 app.include_router(api_router)

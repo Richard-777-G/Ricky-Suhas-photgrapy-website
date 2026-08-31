@@ -11,6 +11,7 @@ import Stories from "@/pages/Stories";
 import StoryDetail from "@/pages/StoryDetail";
 import About from "@/pages/About";
 import Contact from "@/pages/Contact";
+import Prints from "@/pages/Prints";
 import AdminLogin from "@/pages/AdminLogin";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminMedia from "@/pages/AdminMedia";
@@ -36,6 +37,7 @@ export default function App() {
         <Route path="/stories/:id" element={<StoryDetail />} />
         <Route path="/about" element={<About />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/prints" element={<Prints />} />
 
         {/* Private Admin Studio CMS */}
         <Route path="/admin" element={<AdminLogin />} />

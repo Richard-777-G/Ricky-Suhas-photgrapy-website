@@ -224,4 +224,29 @@ export interface InquiryCreate {
   inquiry_type: string;
   message: string;
   location_or_subject?: string;
+  media_id?: string;
+  media_title?: string;
+  print_size?: string;
+  frame_option?: string;
+  quoted_price?: string;
+}
+
+export interface TagFacet {
+  name: string;
+  count: number;
+}
+
+export interface DiscoveryFacets {
+  tags: TagFacet[];
+  categories: TagFacet[];
+  locations: TagFacet[];
+}
+
+export interface SearchResults {
+  query: string;
+  total: number;
+  media: Media[];
+  collections: Collection[];
+  locations: Location[];
+  suggested_tags: string[];
 }

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { X, Play, Volume2, VolumeX, MapPin, ExternalLink } from 'lucide-react';
 import { Instagram } from '@/components/SocialIcons';
 import type { Media } from '@/types';
+import { useLockBodyScroll } from '@/components/Motion';
 
 interface VerticalReelPlayerProps {
   media: Media | null;
@@ -15,8 +16,9 @@ export default function VerticalReelPlayer({
   onClose,
 }: VerticalReelPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(true);
-  const [isMuted, setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
   const videoRef = useRef<HTMLVideoElement | null>(null);
+  useLockBodyScroll(isOpen);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -68,7 +70,9 @@ export default function VerticalReelPlayer({
             src={media.file_url}
             poster={media.thumbnail_url}
             autoPlay
+            muted
             loop
+            preload="metadata"
             playsInline
             data-testid="reel-video-element"
             className="w-full h-full object-cover cursor-pointer"

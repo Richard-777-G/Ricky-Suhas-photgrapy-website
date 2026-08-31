@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { X, Film, ExternalLink } from 'lucide-react';
 import { Youtube } from '@/components/SocialIcons';
 import type { Media } from '@/types';
+import { useLockBodyScroll } from '@/components/Motion';
 
 interface CinematicFilmModalProps {
   media: Media | null;
@@ -14,6 +15,7 @@ export default function CinematicFilmModal({
   isOpen,
   onClose,
 }: CinematicFilmModalProps) {
+  useLockBodyScroll(isOpen);
   useEffect(() => {
     if (!isOpen) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -73,7 +75,7 @@ export default function CinematicFilmModal({
             src={media.file_url}
             poster={media.thumbnail_url}
             controls
-            autoPlay
+            preload="metadata"
             playsInline
             data-testid="cinematic-video-element"
             className="relative z-10 w-full h-full object-contain"
