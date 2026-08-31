@@ -1,415 +1,306 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'motion/react';
-import { MapPin, ArrowRight, Compass, Mountain, Waves } from 'lucide-react';
-import type { Location } from '@/types';
-import { Reveal, Magnetic } from '@/components/Motion';
+import { MapPin, Plus, Minus, Crosshair, ArrowRight, Layers, Mountain } from 'lucide-react';
+import type { Location, Collection } from '@/types';
+import { Magnetic } from '@/components/Motion';
 
-/* Geographic bounds of the archive region (Indian subcontinent + trans-Himalaya) */
-const LON_MIN = 67.0;
-const LON_MAX = 98.5;
-const LAT_MIN = 6.0;
-const LAT_MAX = 36.5;
+/* Instagram-style photo-bubble map.
+   Familiar interaction model: pinch/scroll to zoom, drag to pan, tap a photo
+   bubble to see everything shot in that place. No abstract cartography. */
 
-const VB_W = 1000;
-const VB_H = 1000;
-const PAD_X = 110;
-const PAD_Y = 70;
+const LON_MIN = 68;
+const LON_MAX = 98;
+const LAT_MIN = 6;
+const LAT_MAX = 37;
 
-function project(lon: number, lat: number): [number, number] {
-  const x = PAD_X + ((lon - LON_MIN) / (LON_MAX - LON_MIN)) * (VB_W - PAD_X * 2);
-  const y = PAD_Y + ((LAT_MAX - lat) / (LAT_MAX - LAT_MIN)) * (VB_H - PAD_Y * 2);
-  return [x, y];
-}
-
-/* Coastline + border silhouette of the archive landmass, in real [lon, lat] pairs,
-   projected through the same transform as the location nodes so pins land correctly. */
-const LANDMASS: [number, number][] = [
-  [68.2, 23.7], [70.0, 20.7], [72.8, 19.1], [73.5, 15.9], [74.8, 12.9],
-  [76.5, 8.9], [77.5, 8.1], [79.8, 10.3], [80.3, 13.1], [82.2, 16.8],
-  [85.8, 19.9], [87.5, 21.6], [89.1, 22.0], [89.7, 25.3], [88.1, 26.5],
-  [90.5, 26.9], [92.0, 26.9], [94.5, 27.5], [96.0, 28.2], [97.4, 28.3],
-  [95.5, 29.3], [93.0, 28.3], [89.5, 28.0], [88.0, 27.9], [85.0, 27.9],
-  [81.0, 30.3], [79.0, 31.0], [78.5, 32.6], [76.0, 32.9], [74.5, 34.5],
-  [76.5, 35.6], [78.2, 35.5], [77.0, 32.5], [75.0, 32.0], [74.0, 31.0],
-  [72.0, 28.0], [70.0, 27.5], [68.8, 24.5],
-];
-
-/* Himalayan / Western Ghats ridge spines drawn as topographic relief strokes */
-const RIDGES: [number, number][][] = [
-  [[73.8, 15.5], [74.6, 13.4], [76.2, 11.2], [77.0, 9.4]],
-  [[74.0, 34.0], [77.5, 32.3], [80.5, 30.2], [84.0, 28.4], [88.0, 27.6], [92.5, 27.6]],
-  [[73.2, 18.6], [73.9, 16.8], [74.4, 14.6]],
-];
-
-function toPath(points: [number, number][], close = false): string {
-  const d = points
-    .map(([lon, lat], i) => {
-      const [x, y] = project(lon, lat);
-      return `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`;
-    })
-    .join(' ');
-  return close ? `${d} Z` : d;
+/** Position a place as a percentage of the canvas, from its real coordinates. */
+function positionFor(loc: Location) {
+  const left = 8 + ((loc.longitude - LON_MIN) / (LON_MAX - LON_MIN)) * 84;
+  const top = 10 + ((LAT_MAX - loc.latitude) / (LAT_MAX - LAT_MIN)) * 78;
+  return { left: `${Math.min(92, Math.max(8, left))}%`, top: `${Math.min(88, Math.max(10, top))}%` };
 }
 
 interface InteractiveMapProps {
   locations: Location[];
+  collections?: Collection[];
   onSelectLocation?: (location: Location) => void;
   selectedLocationId?: string;
 }
 
 export default function InteractiveMap({
   locations,
+  collections = [],
   onSelectLocation,
   selectedLocationId,
 }: InteractiveMapProps) {
+  const [zoom, setZoom] = useState(1);
   const [activeId, setActiveId] = useState<string | undefined>(
     selectedLocationId || locations[0]?.id
   );
-  const [hoverId, setHoverId] = useState<string | null>(null);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const reduce = useReducedMotion();
 
-  const activeLoc =
-    locations.find((l) => l.id === (activeId || selectedLocationId)) || locations[0] || null;
+  const activeLoc = locations.find((l) => l.id === activeId) || locations[0] || null;
 
-  const landPath = useMemo(() => toPath(LANDMASS, true), []);
-  const ridgePaths = useMemo(() => RIDGES.map((r) => toPath(r)), []);
-
-  // Elevation contours: nested scaled copies of the silhouette read as topography
-  const contours = useMemo(
-    () => [0.94, 0.87, 0.78, 0.68].map((scale, i) => ({ scale, key: i })),
-    []
+  const relatedCollections = useMemo(
+    () => collections.filter((c) => c.location_id === activeLoc?.id),
+    [collections, activeLoc]
   );
 
-  // Great-circle style connection arcs between consecutive expedition sites
-  const arcs = useMemo(() => {
-    const out: string[] = [];
-    for (let i = 0; i < locations.length - 1; i++) {
-      const [x1, y1] = project(locations[i].longitude, locations[i].latitude);
-      const [x2, y2] = project(locations[i + 1].longitude, locations[i + 1].latitude);
-      const mx = (x1 + x2) / 2;
-      const my = (y1 + y2) / 2 - Math.abs(x2 - x1) * 0.32 - 30;
-      out.push(`M${x1.toFixed(1)},${y1.toFixed(1)} Q${mx.toFixed(1)},${my.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}`);
-    }
-    return out;
-  }, [locations]);
-
-  const handleSelect = (loc: Location) => {
+  const select = (loc: Location) => {
     setActiveId(loc.id);
     onSelectLocation?.(loc);
   };
 
+  const clampZoom = (z: number) => Math.min(2.6, Math.max(1, parseFloat(z.toFixed(2))));
+
   return (
     <div
       data-testid="spatial-interactive-map"
-      className="relative rounded-[28px] border border-[#D4AF37]/20 bg-card/70 backdrop-blur-xl p-5 sm:p-8 lg:p-10 overflow-hidden shadow-2xl"
+      className="relative rounded-[28px] border border-[#D4AF37]/20 bg-card/60 backdrop-blur-xl overflow-hidden shadow-2xl"
     >
       {/* Header */}
-      <Reveal className="flex flex-col lg:flex-row lg:items-end justify-between gap-5 mb-8 border-b border-border/40 pb-5">
-        <div className="space-y-1.5">
-          <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.25em] text-[#D4AF37]">
-            <Compass
-              className="w-3.5 h-3.5"
-              style={reduce ? undefined : { animation: 'spin 26s linear infinite' }}
-            />
-            <span>Geographical Coordinates & Relief Archive</span>
+      <div className="px-5 sm:px-8 pt-6 pb-4 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-border/30">
+        <div className="space-y-1">
+          <div className="flex items-center gap-2 text-[11px] font-mono uppercase tracking-[0.26em] text-[#D4AF37]">
+            <MapPin className="w-3.5 h-3.5" />
+            <span>Places Ricky has photographed</span>
           </div>
           <h3 className="font-serif text-2xl sm:text-3xl text-foreground font-light tracking-tight">
-            Topographical World Explorer
+            Tap a place to open its work
           </h3>
         </div>
 
-        <div className="flex flex-wrap gap-2">
-          {locations.map((loc) => {
-            const isSelected = activeLoc?.id === loc.id;
+        {/* Zoom controls */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={() => setZoom((z) => clampZoom(z - 0.35))}
+            data-testid="map-zoom-out-button"
+            title="Zoom out"
+            className="p-2 rounded-full border border-border/60 bg-background/70 text-foreground hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors duration-300"
+          >
+            <Minus className="w-3.5 h-3.5" />
+          </button>
+          <span
+            data-testid="map-zoom-level"
+            className="px-3 py-1.5 rounded-full border border-border/50 bg-background/70 text-[10px] font-mono text-muted-foreground min-w-[62px] text-center"
+          >
+            {Math.round(zoom * 100)}%
+          </span>
+          <button
+            onClick={() => setZoom((z) => clampZoom(z + 0.35))}
+            data-testid="map-zoom-in-button"
+            title="Zoom in"
+            className="p-2 rounded-full border border-border/60 bg-background/70 text-foreground hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors duration-300"
+          >
+            <Plus className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={() => setZoom(1)}
+            data-testid="map-reset-button"
+            title="Reset view"
+            className="p-2 rounded-full border border-border/60 bg-background/70 text-foreground hover:border-[#D4AF37] hover:text-[#D4AF37] transition-colors duration-300"
+          >
+            <Crosshair className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Bubble canvas */}
+      <div
+        ref={canvasRef}
+        data-testid="photo-bubble-canvas"
+        onWheel={(e) => {
+          e.preventDefault();
+          setZoom((z) => clampZoom(z + (e.deltaY < 0 ? 0.14 : -0.14)));
+        }}
+        className="relative h-[420px] sm:h-[520px] overflow-hidden cursor-grab active:cursor-grabbing bg-[#070A0F]"
+      >
+        {/* soft world wash + grid so panning reads as movement */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(212,175,55,0.10),transparent_65%)]" />
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:72px_72px]" />
+
+        <motion.div
+          className="absolute inset-0"
+          drag
+          dragMomentum={false}
+          dragElastic={0.12}
+          dragConstraints={{ left: -260, right: 260, top: -200, bottom: 200 }}
+          animate={{ scale: zoom }}
+          transition={{ type: 'spring', stiffness: 90, damping: 20, mass: 0.9 }}
+          style={{ transformOrigin: 'center center' }}
+        >
+          {locations.map((loc, idx) => {
+            const isActive = activeLoc?.id === loc.id;
+            const pos = positionFor(loc);
+            const size = 74 + Math.min(46, loc.works_count * 4);
+
             return (
-              <button
+              <motion.button
                 key={loc.id}
-                onClick={() => handleSelect(loc)}
-                onMouseEnter={() => setHoverId(loc.id)}
-                onMouseLeave={() => setHoverId(null)}
-                data-testid={`map-node-button-${loc.id}`}
-                className={`px-3 py-1.5 rounded-full text-[11px] font-mono transition-all duration-300 flex items-center gap-1.5 ${
-                  isSelected
-                    ? 'bg-[#D4AF37] text-black font-semibold shadow-lg shadow-[#D4AF37]/25 scale-[1.03]'
-                    : 'bg-background/70 border border-border/60 hover:border-[#D4AF37] text-muted-foreground hover:text-foreground'
-                }`}
+                onClick={() => select(loc)}
+                data-testid={`map-bubble-${loc.id}`}
+                title={`${loc.place_name} — ${loc.works_count} works`}
+                className="absolute -translate-x-1/2 -translate-y-1/2 group"
+                style={{ ...pos, width: size, height: size }}
+                initial={reduce ? { opacity: 1 } : { opacity: 0, scale: 0.4 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{
+                  duration: 0.9,
+                  delay: reduce ? 0 : 0.18 + idx * 0.12,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                whileHover={{ scale: 1.08, zIndex: 30 }}
               >
-                <MapPin className="w-3 h-3" />
-                <span>{loc.place_name.split(' ')[0]}</span>
-                <span className="opacity-60">{loc.works_count}</span>
-              </button>
+                {/* halo */}
+                <span
+                  className={`absolute -inset-2 rounded-full transition-all duration-500 ${
+                    isActive ? 'bg-[#D4AF37]/30 blur-[6px]' : 'bg-transparent group-hover:bg-[#D4AF37]/15'
+                  }`}
+                />
+                {!reduce && isActive && (
+                  <motion.span
+                    className="absolute -inset-1 rounded-full border border-[#D4AF37]"
+                    animate={{ opacity: [0.7, 0], scale: [1, 1.55] }}
+                    transition={{ duration: 2.6, repeat: Infinity, ease: 'easeOut' }}
+                  />
+                )}
+
+                {/* photo bubble */}
+                <span
+                  className={`relative block w-full h-full rounded-full overflow-hidden border-2 transition-colors duration-500 ${
+                    isActive ? 'border-[#D4AF37]' : 'border-white/25 group-hover:border-[#D4AF37]/70'
+                  }`}
+                  style={{ boxShadow: '0 14px 34px -10px rgba(0,0,0,0.9)' }}
+                >
+                  <img
+                    src={loc.cover_image_url}
+                    alt={loc.place_name}
+                    loading="lazy"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-[1200ms] ease-out"
+                  />
+                  <span
+                    className={`absolute inset-0 transition-opacity duration-500 ${
+                      isActive ? 'bg-black/10' : 'bg-black/45 group-hover:bg-black/20'
+                    }`}
+                  />
+                  {/* work count pill */}
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-[1px] rounded-full bg-black/75 border border-[#D4AF37]/40 text-[9px] font-mono text-[#D4AF37]">
+                    {loc.works_count}
+                  </span>
+                </span>
+
+                {/* place label */}
+                <span
+                  className={`absolute top-full left-1/2 -translate-x-1/2 mt-2 whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-mono transition-all duration-400 ${
+                    isActive
+                      ? 'bg-[#D4AF37] text-black font-semibold opacity-100'
+                      : 'bg-black/75 text-white/85 opacity-0 group-hover:opacity-100'
+                  }`}
+                >
+                  {loc.place_name.split(' ').slice(0, 2).join(' ')}
+                </span>
+              </motion.button>
             );
           })}
+        </motion.div>
+
+        {/* hint */}
+        <div className="absolute bottom-3 left-4 text-[9px] font-mono text-white/40 pointer-events-none">
+          DRAG TO PAN · SCROLL TO ZOOM · TAP A PLACE
         </div>
-      </Reveal>
+      </div>
 
-      {/* Map canvas + inspector */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-        {/* SVG relief map */}
-        <div className="lg:col-span-7 relative rounded-3xl bg-[#04050A] border border-border/40 overflow-hidden min-h-[340px] sm:min-h-[460px]">
-          {/* atmospheric depth wash */}
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_35%,rgba(212,175,55,0.10),transparent_62%)]" />
-          {/* graticule */}
-          <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(212,175,55,0.045)_1px,transparent_1px),linear-gradient(to_bottom,rgba(212,175,55,0.045)_1px,transparent_1px)] bg-[size:56px_56px]" />
-
-          <svg
-            viewBox={`0 0 ${VB_W} ${VB_H}`}
-            className="relative z-10 w-full h-full"
-            data-testid="topographic-map-svg"
-            role="img"
-            aria-label="Topographical map of Ricky Suhas expedition locations"
-          >
-            <defs>
-              <linearGradient id="landFill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#1C2431" stopOpacity="0.95" />
-                <stop offset="55%" stopColor="#121822" stopOpacity="0.9" />
-                <stop offset="100%" stopColor="#0A0E15" stopOpacity="0.95" />
-              </linearGradient>
-              <linearGradient id="coastStroke" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stopColor="#F3E5AB" />
-                <stop offset="50%" stopColor="#D4AF37" />
-                <stop offset="100%" stopColor="#8A6D12" />
-              </linearGradient>
-              <filter id="coastGlow" x="-40%" y="-40%" width="180%" height="180%">
-                <feGaussianBlur stdDeviation="9" result="b" />
-                <feMerge>
-                  <feMergeNode in="b" />
-                  <feMergeNode in="SourceGraphic" />
-                </feMerge>
-              </filter>
-            </defs>
-
-            {/* ocean shelf halo */}
-            <path d={landPath} fill="none" stroke="#D4AF37" strokeOpacity="0.10" strokeWidth="26" />
-            <path d={landPath} fill="none" stroke="#D4AF37" strokeOpacity="0.14" strokeWidth="12" />
-
-            {/* landmass */}
-            <path d={landPath} fill="url(#landFill)" />
-
-            {/* elevation contours */}
-            <g
-              style={{ transformOrigin: '50% 52%' }}
-              stroke="#D4AF37"
-              fill="none"
-              strokeLinejoin="round"
-            >
-              {contours.map(({ scale, key }) => (
-                <path
-                  key={key}
-                  d={landPath}
-                  strokeOpacity={0.16 - key * 0.028}
-                  strokeWidth={1.1}
-                  strokeDasharray="5 7"
-                  transform={`translate(${(VB_W / 2) * (1 - scale)}, ${(VB_H * 0.52) * (1 - scale)}) scale(${scale})`}
-                />
-              ))}
-            </g>
-
-            {/* mountain ridge relief */}
-            {ridgePaths.map((d, i) => (
-              <path
-                key={`ridge-${i}`}
-                d={d}
-                fill="none"
-                stroke="#F3E5AB"
-                strokeOpacity="0.22"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeDasharray="3 9"
-              />
-            ))}
-
-            {/* coastline */}
-            <path
-              d={landPath}
-              fill="none"
-              stroke="url(#coastStroke)"
-              strokeWidth="2.4"
-              strokeLinejoin="round"
-              filter="url(#coastGlow)"
-            />
-
-            {/* expedition connection arcs */}
-            {arcs.map((d, i) => (
-              <motion.path
-                key={`arc-${i}`}
-                d={d}
-                fill="none"
-                stroke="#D4AF37"
-                strokeOpacity="0.4"
-                strokeWidth="1.4"
-                strokeDasharray="8 12"
-                initial={reduce ? undefined : { pathLength: 0, opacity: 0 }}
-                animate={reduce ? undefined : { pathLength: 1, opacity: 1 }}
-                transition={{ duration: 2.1, delay: 0.35 + i * 0.28, ease: 'easeInOut' }}
-              />
-            ))}
-
-            {/* location nodes */}
-            {locations.map((loc, idx) => {
-              const [x, y] = project(loc.longitude, loc.latitude);
-              const isSelected = activeLoc?.id === loc.id;
-              const isHover = hoverId === loc.id;
-              const r = 9 + Math.min(9, loc.works_count * 0.7);
-
-              return (
-                <g
-                  key={loc.id}
-                  transform={`translate(${x},${y})`}
-                  className="cursor-pointer"
-                  onClick={() => handleSelect(loc)}
-                  onMouseEnter={() => setHoverId(loc.id)}
-                  onMouseLeave={() => setHoverId(null)}
-                  data-testid={`map-svg-node-${loc.id}`}
-                >
-                  {/* sonar pulse */}
-                  {!reduce && (
-                    <motion.circle
-                      r={r}
-                      fill="none"
-                      stroke="#D4AF37"
-                      strokeWidth="1.6"
-                      initial={{ opacity: 0.55, scale: 0.7 }}
-                      animate={{ opacity: 0, scale: 2.9 }}
-                      transition={{
-                        duration: 3.1,
-                        repeat: Infinity,
-                        delay: idx * 0.55,
-                        ease: 'easeOut',
-                      }}
-                    />
-                  )}
-                  <circle r={r + 8} fill="#D4AF37" fillOpacity={isSelected ? 0.2 : isHover ? 0.12 : 0.05} />
-                  <circle
-                    r={r}
-                    fill={isSelected ? '#D4AF37' : '#04050A'}
-                    stroke={isSelected ? '#FFFFFF' : '#D4AF37'}
-                    strokeWidth="2.2"
-                  />
-                  <text
-                    y="4.5"
-                    textAnchor="middle"
-                    fontSize="11"
-                    fontWeight="700"
-                    fill={isSelected ? '#04050A' : '#D4AF37'}
-                    style={{ fontFamily: 'monospace', pointerEvents: 'none' }}
-                  >
-                    {idx + 1}
-                  </text>
-                  {(isSelected || isHover) && (
-                    <g style={{ pointerEvents: 'none' }}>
-                      <rect
-                        x={-96}
-                        y={r + 10}
-                        width={192}
-                        height={34}
-                        rx={8}
-                        fill="#04050A"
-                        fillOpacity="0.94"
-                        stroke="#D4AF37"
-                        strokeOpacity="0.5"
-                      />
-                      <text
-                        y={r + 25}
-                        textAnchor="middle"
-                        fontSize="12"
-                        fill="#F7F6F3"
-                        style={{ fontFamily: 'monospace' }}
-                      >
-                        {loc.place_name.slice(0, 26)}
-                      </text>
-                      <text
-                        y={r + 38}
-                        textAnchor="middle"
-                        fontSize="10"
-                        fill="#D4AF37"
-                        style={{ fontFamily: 'monospace' }}
-                      >
-                        {loc.latitude.toFixed(2)}°N {loc.longitude.toFixed(2)}°E
-                      </text>
-                    </g>
-                  )}
-                </g>
-              );
-            })}
-          </svg>
-
-          {/* HUD readouts */}
-          <div className="absolute bottom-3 left-4 text-[10px] font-mono text-muted-foreground/70 space-y-0.5 z-20">
-            <div className="text-[#D4AF37]">RELIEF PROJECTION · EQUIRECTANGULAR</div>
-            <div>
-              LON {LON_MIN.toFixed(1)}°–{LON_MAX.toFixed(1)}°E · LAT {LAT_MIN.toFixed(1)}°–
-              {LAT_MAX.toFixed(1)}°N
-            </div>
-            <div>{locations.length} RECORDED EXPEDITION SITES</div>
-          </div>
-        </div>
-
-        {/* Inspector */}
-        {activeLoc && (
-          <motion.div
-            key={activeLoc.id}
-            data-testid="selected-location-hud-card"
-            initial={reduce ? undefined : { opacity: 0, x: 26, filter: 'blur(8px)' }}
-            animate={reduce ? undefined : { opacity: 1, x: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
-            className="lg:col-span-5 bg-background/60 rounded-3xl border border-[#D4AF37]/30 p-6 space-y-4 backdrop-blur-xl flex flex-col"
-          >
-            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden border border-border/40 group">
-              <img
-                src={activeLoc.cover_image_url}
-                alt={activeLoc.place_name}
-                loading="lazy"
-                className="w-full h-full object-cover group-hover:scale-[1.06] transition-transform duration-[1400ms] ease-out"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/10 to-transparent" />
-              <div className="absolute bottom-3 left-4 right-4">
-                <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#D4AF37]">
-                  {activeLoc.country} · {activeLoc.region}
-                </span>
-                <h4 className="font-serif text-lg text-white font-medium">{activeLoc.place_name}</h4>
-              </div>
-            </div>
-
+      {/* Selected place — related collections */}
+      {activeLoc && (
+        <motion.div
+          key={activeLoc.id}
+          data-testid="selected-location-hud-card"
+          initial={reduce ? undefined : { opacity: 0, y: 18 }}
+          animate={reduce ? undefined : { opacity: 1, y: 0 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          className="p-5 sm:p-8 border-t border-border/30 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start"
+        >
+          <div className="lg:col-span-5 space-y-3">
+            <span className="text-[10px] font-mono uppercase tracking-[0.24em] text-[#D4AF37]">
+              {activeLoc.country} · {activeLoc.region}
+            </span>
+            <h4 className="font-serif text-2xl text-foreground font-medium leading-tight">
+              {activeLoc.place_name}
+            </h4>
             <p className="text-xs text-muted-foreground leading-relaxed">{activeLoc.description}</p>
 
-            <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
-              <div className="bg-background/80 p-2.5 rounded-lg border border-border/40">
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Waves className="w-3 h-3 text-[#D4AF37]" /> COORDINATES
-                </span>
-                <span className="text-foreground font-semibold">
-                  {activeLoc.latitude.toFixed(4)}°N, {activeLoc.longitude.toFixed(4)}°E
-                </span>
-              </div>
-              <div className="bg-background/80 p-2.5 rounded-lg border border-border/40">
-                <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                  <Mountain className="w-3 h-3 text-[#D4AF37]" /> ELEVATION
-                </span>
-                <span className="text-foreground font-semibold">
-                  {activeLoc.altitude || 'Sea Level'}
-                </span>
-              </div>
+            <div className="flex flex-wrap gap-2 pt-1 text-[10px] font-mono">
+              <span className="px-2.5 py-1 rounded-full bg-background/70 border border-border/50 text-muted-foreground">
+                {activeLoc.latitude.toFixed(2)}°N, {activeLoc.longitude.toFixed(2)}°E
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-background/70 border border-border/50 text-muted-foreground flex items-center gap-1">
+                <Mountain className="w-3 h-3 text-[#D4AF37]" />
+                {activeLoc.altitude || 'Sea level'}
+              </span>
+              <span className="px-2.5 py-1 rounded-full bg-[#D4AF37]/12 border border-[#D4AF37]/40 text-[#D4AF37]">
+                {activeLoc.works_count} works
+              </span>
             </div>
 
-            <div className="mt-auto pt-2">
-              <Magnetic strength={0.14} className="w-full">
-                <Link
-                  to={`/places?location=${activeLoc.id}`}
-                  data-testid="explore-location-archive-button"
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-[#D4AF37] hover:bg-[#F3E5AB] text-black font-semibold text-[11px] font-mono uppercase tracking-[0.15em] transition-colors duration-300"
-                >
-                  <span>
-                    Explore {activeLoc.works_count} works · {activeLoc.place_name.split(' ')[0]}
-                  </span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-              </Magnetic>
-            </div>
-          </motion.div>
-        )}
-      </div>
+            <Magnetic strength={0.14}>
+              <Link
+                to={`/places?location=${activeLoc.id}`}
+                data-testid="explore-location-archive-button"
+                className="mt-2 inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-full bg-[#D4AF37] hover:bg-[#F3E5AB] text-black font-semibold text-[10px] font-mono uppercase tracking-[0.18em] transition-colors duration-300"
+              >
+                <span>Open this place</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </Magnetic>
+          </div>
+
+          {/* Related collections shot in this place */}
+          <div className="lg:col-span-7 space-y-2.5">
+            <span className="text-[10px] font-mono uppercase tracking-[0.22em] text-muted-foreground flex items-center gap-1.5">
+              <Layers className="w-3 h-3 text-[#D4AF37]" />
+              Collections from {activeLoc.place_name.split(' ')[0]}
+            </span>
+
+            {relatedCollections.length === 0 ? (
+              <p
+                data-testid="location-no-collections"
+                className="text-xs text-muted-foreground/70 py-4 px-4 rounded-xl border border-dashed border-border/50"
+              >
+                No dedicated collection here yet — open the place to browse its individual works.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {relatedCollections.map((col) => (
+                  <Link
+                    key={col.id}
+                    to={`/collections/${col.id}`}
+                    data-testid={`location-collection-${col.id}`}
+                    className="group relative rounded-2xl overflow-hidden border border-border/40 hover:border-[#D4AF37]/70 transition-colors duration-500 aspect-[16/9]"
+                  >
+                    <img
+                      src={col.cover_image_url}
+                      alt={col.title}
+                      loading="lazy"
+                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-[1.07] transition-transform duration-[1400ms] ease-out"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/25 to-transparent" />
+                    <div className="absolute bottom-3 left-4 right-4">
+                      <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-[#D4AF37]">
+                        {col.media_count} works
+                      </div>
+                      <div className="font-serif text-base text-white font-medium leading-snug group-hover:text-[#D4AF37] transition-colors duration-300">
+                        {col.title}
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      )}
     </div>
   );
 }

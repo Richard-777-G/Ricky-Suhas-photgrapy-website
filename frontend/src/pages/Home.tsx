@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
-import { motion, useInView, useScroll, useTransform, useReducedMotion } from 'motion/react';
+import { motion, AnimatePresence, useInView, useScroll, useTransform, useReducedMotion } from 'motion/react';
 import { apiGet } from '@/lib/api';
 import type { Media, Collection, Location, Story, SiteSettings } from '@/types';
 import {
@@ -118,7 +118,16 @@ function StatCounter({ value, label }: { value: string; label: string }) {
   );
 }
 
+const HERO_PHRASES = [
+  'Nature photographer · cinematographer · percussionist',
+  'Ancient rainforests and cloud canopies',
+  'High Himalayan frontiers at first light',
+  'Coastal cadences of the Arabian Sea',
+];
+
 export default function Home() {
+  const [heroIndex, setHeroIndex] = useState(0);
+  const [phraseIndex, setPhraseIndex] = useState(0);
   const [selectedPhoto, setSelectedPhoto] = useState<Media | null>(null);
   const [selectedFilm, setSelectedFilm] = useState<Media | null>(null);
   const [selectedReel, setSelectedReel] = useState<Media | null>(null);
@@ -160,6 +169,27 @@ export default function Home() {
   const featuredHero = photos[0] || null;
   const featuredFilm = films[0] || null;
   const quotePhoto = photos[3] || photos[1] || featuredHero;
+  const heroSlides = photos.slice(0, 5);
+  const activeSlide = heroSlides[heroIndex] || featuredHero;
+
+  /* Slow auto-advance — 7s per photograph, 3.6s per phrase. Slow is smooth. */
+  useEffect(() => {
+    if (reduce || heroSlides.length < 2) return;
+    const t = window.setInterval(
+      () => setHeroIndex((i) => (i + 1) % heroSlides.length),
+      7000
+    );
+    return () => window.clearInterval(t);
+  }, [reduce, heroSlides.length]);
+
+  useEffect(() => {
+    if (reduce) return;
+    const t = window.setInterval(
+      () => setPhraseIndex((i) => (i + 1) % HERO_PHRASES.length),
+      3600
+    );
+    return () => window.clearInterval(t);
+  }, [reduce]);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col overflow-x-hidden">
@@ -171,44 +201,60 @@ export default function Home() {
         data-testid="cinematic-hero-section"
         className="relative min-h-[94vh] sm:min-h-screen flex items-center justify-center overflow-hidden"
       >
-        {/* Anchor visual — one exceptional photograph, slow drift + parallax */}
+        {/* Anchor visuals — slow auto-advancing crossfade (Ken Burns drift) */}
         <motion.div className="absolute inset-0 z-0" style={reduce ? undefined : { y: heroImgY }}>
-          <img
-            src={
-              featuredHero?.file_url ||
-              'https://images.unsplash.com/photo-1675702662605-57e37a8cb2c3?crop=entropy&cs=srgb&fm=jpg&q=85&w=2400'
-            }
-            alt={featuredHero?.title || 'Western Ghats cloud canopy at first light'}
-            data-testid="hero-anchor-image"
-            className="w-full h-full object-cover animate-hero-drift will-change-transform"
-          />
+          {heroSlides.map((slide, i) => (
+            <motion.div
+              key={slide.id}
+              className="absolute inset-0"
+              initial={false}
+              animate={{ opacity: i === heroIndex ? 1 : 0 }}
+              transition={{ duration: 2.4, ease: [0.42, 0, 0.58, 1] }}
+            >
+              <img
+                src={slide.file_url}
+                alt={slide.title}
+                data-testid={i === 0 ? 'hero-anchor-image' : `hero-slide-${i}`}
+                loading={i === 0 ? 'eager' : 'lazy'}
+                className="w-full h-full object-cover animate-hero-drift will-change-transform"
+              />
+            </motion.div>
+          ))}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/45 to-black/55" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_28%,rgba(0,0,0,0.72)_100%)]" />
         </motion.div>
 
-        {/* Telemetry HUD */}
+        {/* Slide indicators + live caption of the visible photograph */}
         <motion.div
-          data-testid="hero-telemetry-hud"
-          initial={{ opacity: 0, x: -22 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 1.3, delay: 1.5, ease: [0.16, 1, 0.3, 1] }}
+          data-testid="hero-slide-indicators"
           style={reduce ? undefined : { opacity: heroFade }}
-          className="absolute top-28 left-4 sm:left-8 lg:left-12 z-20 hidden sm:flex flex-col gap-1 text-[10px] font-mono text-white/65 bg-black/35 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10"
+          className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-3"
         >
-          <span className="flex items-center gap-2 text-[#D4AF37]">
+          <AnimatePresence mode="wait">
             <motion.span
-              className="w-1.5 h-1.5 rounded-full bg-[#D4AF37]"
-              animate={{ opacity: [1, 0.2, 1] }}
-              transition={{ duration: 2.4, repeat: Infinity }}
-            />
-            OPTICAL TELEMETRY · MASTER ARCHIVE
-          </span>
-          <span>BODY · {featuredHero?.exif?.camera || 'Sony Alpha 7R V'}</span>
-          <span>
-            OPTIC · {featuredHero?.exif?.lens || 'FE 24-70mm F2.8 GM II'} ·{' '}
-            {featuredHero?.exif?.shutter_speed || '1/640s'} · {featuredHero?.exif?.aperture || 'f/5.6'}
-          </span>
-          <span>SITE · {featuredHero?.location_name || 'Western Ghats Rainforests'}</span>
+              key={activeSlide?.id}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.8 }}
+              className="text-[10px] font-mono uppercase tracking-[0.24em] text-white/60 text-center px-4"
+            >
+              {activeSlide?.location_name}
+            </motion.span>
+          </AnimatePresence>
+          <div className="flex items-center gap-2">
+            {heroSlides.map((slide, i) => (
+              <button
+                key={slide.id}
+                onClick={() => setHeroIndex(i)}
+                data-testid={`hero-slide-dot-${i}`}
+                aria-label={`Show ${slide.title}`}
+                className={`h-[3px] rounded-full transition-all duration-700 ${
+                  i === heroIndex ? 'w-9 bg-[#D4AF37]' : 'w-3.5 bg-white/30 hover:bg-white/60'
+                }`}
+              />
+            ))}
+          </div>
         </motion.div>
 
         {/* Core statement */}
@@ -262,10 +308,30 @@ export default function Home() {
             <p className="text-lg sm:text-2xl font-serif italic text-[#F2F0EA]/95 tracking-wide">
               "{settings?.motto || 'Beauty Seeker — Take a moment to enjoy God\'s creation'}"
             </p>
-            <p className="text-xs sm:text-sm text-white/70 leading-relaxed max-w-lg mx-auto">
-              International nature photographer, cinematographer and percussionist. Ancient
-              rainforests, high Himalayan frontiers, and coastal cadences.
-            </p>
+            <div className="h-6 flex items-center justify-center" data-testid="hero-rotating-tagline">
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={phraseIndex}
+                  className="text-xs sm:text-sm text-white/70 tracking-[0.18em] uppercase font-mono"
+                  initial={{ opacity: 0, y: 10, filter: 'blur(6px)' }}
+                  animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -10, filter: 'blur(6px)' }}
+                  transition={{ duration: 1.1, ease: [0.16, 1, 0.3, 1] }}
+                >
+                  {HERO_PHRASES[phraseIndex].split('').map((ch, i) => (
+                    <motion.span
+                      key={`${phraseIndex}-${i}`}
+                      className="inline-block"
+                      initial={{ opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.5, delay: i * 0.018 }}
+                    >
+                      {ch === ' ' ? '\u00A0' : ch}
+                    </motion.span>
+                  ))}
+                </motion.p>
+              </AnimatePresence>
+            </div>
           </motion.div>
 
           <motion.div
@@ -506,7 +572,7 @@ export default function Home() {
           linkLabel="Open full atlas"
         />
         <Reveal y={30}>
-          <InteractiveMap locations={locations} />
+          <InteractiveMap locations={locations} collections={collections} />
         </Reveal>
       </section>
 

@@ -13,10 +13,15 @@ class Inquiry(BaseModel):
     # Fine art print request fields
     media_id: Optional[str] = None
     media_title: Optional[str] = None
+    media_thumbnail: Optional[str] = None
     print_size: Optional[str] = None
     frame_option: Optional[str] = None
     quoted_price: Optional[str] = None
-    status: str = "new"
+    # Studio quote reply
+    status: str = "new"  # new | quoted | fulfilled | archived
+    quote_amount: Optional[str] = None
+    quote_message: Optional[str] = None
+    replied_at: Optional[datetime] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
 class InquiryCreate(BaseModel):
@@ -27,6 +32,16 @@ class InquiryCreate(BaseModel):
     location_or_subject: Optional[str] = None
     media_id: Optional[str] = None
     media_title: Optional[str] = None
+    media_thumbnail: Optional[str] = None
     print_size: Optional[str] = None
     frame_option: Optional[str] = None
     quoted_price: Optional[str] = None
+
+class InquiryQuote(BaseModel):
+    """One-click quote reply sent from the Studio inbox."""
+    quote_amount: str
+    quote_message: Optional[str] = None
+    status: str = "quoted"
+
+class InquiryStatusUpdate(BaseModel):
+    status: str
