@@ -1,0 +1,138 @@
+{
+  "project_title": "Ricky Suhas (@rickysuhas) - International Visual Exploration & Digital Cinematic Archive",
+  "brand_identity": {
+    "name": "Ricky Suhas",
+    "handle": "@rickysuhas",
+    "motto": "Beauty Seeker - Take a moment to enjoy God's creation",
+    "persona": "International Nature Photographer, Videographer, and Percussionist",
+    "emotional_tone": "Cinematic, serene, spatial, sacred, ultra-luxurious, atmospheric",
+    "theme_modes": {
+      "default": "Dark Obsidian Luxury (#050607)",
+      "toggle": "Warm Ivory (#F2F0EA)",
+      "accent": "Champagne Metallic (#D4AF37 / #C5A059)"
+    }
+  },
+  "typography": {
+    "headings": {
+      "font_family": "Cormorant Garamond, Bodoni Moda, or Serif Display",
+      "h1_hero": "text-4xl sm:text-5xl lg:text-6xl tracking-tight font-light leading-none",
+      "h2_section": "text-2xl sm:text-3xl lg:text-4xl font-serif tracking-tight",
+      "h3_card": "text-xl sm:text-2xl font-serif font-medium",
+      "h4_label": "text-xs uppercase tracking-[0.25em] font-mono opacity-70"
+    },
+    "body": {
+      "font_family": "Manrope, Plus Jakarta Sans, or Satoshi",
+      "base": "text-base sm:text-sm leading-relaxed font-normal",
+      "small": "text-xs tracking-wide opacity-80"
+    },
+    "mono_data": {
+      "font_family": "JetBrains Mono, Source Code Pro",
+      "usage": "Coordinates, camera metadata (EXIF: 1/1000s, f/2.8, ISO 100, 24mm), GPS location labels, admin tags"
+    }
+  },
+  "colors": {
+    "dark_mode": {
+      "bg_primary": "#050607",
+      "bg_surface": "#0C0E12",
+      "bg_surface_elevated": "#14171F",
+      "border_subtle": "rgba(212, 175, 55, 0.12)",
+      "border_active": "rgba(212, 175, 55, 0.4)",
+      "text_primary": "#F7F6F3",
+      "text_secondary": "#A1A8B3",
+      "text_muted": "#636B77",
+      "accent_gold": "#D4AF37",
+      "accent_glow": "rgba(212, 175, 55, 0.25)"
+    },
+    "light_mode": {
+      "bg_primary": "#F2F0EA",
+      "bg_surface": "#E8E4DA",
+      "bg_surface_elevated": "#DCD6C8",
+      "border_subtle": "rgba(120, 95, 30, 0.15)",
+      "border_active": "rgba(197, 160, 89, 0.6)",
+      "text_primary": "#1A1917",
+      "text_secondary": "#4A4742",
+      "text_muted": "#7C776E",
+      "accent_gold": "#B8860B",
+      "accent_glow": "rgba(184, 134, 11, 0.2)"
+    }
+  },
+  "spacing_and_layout": {
+    "container_padding": "px-4 sm:px-8 lg:px-16 py-12 lg:py-24",
+    "grid_gap": "gap-6 sm:gap-8 lg:gap-12",
+    "hero_height": "min-h-screen relative flex items-center justify-center overflow-hidden",
+    "bento_asymmetry": "MODE A: TETRIS GRID (col-span-full md:col-span-8, col-span-4, col-span-12) for photography storyboards",
+    "vertical_reels": "Mobile card aspect ratio (aspect-[9/16]), smooth vertical swipe or horizontal wheel scroll with micro-audio toggle"
+  },
+  "visual_enhancers": {
+    "glassmorphism": "backdrop-blur-xl bg-black/60 border border-white/10 (dark) or backdrop-blur-xl bg-white/70 border border-black/10 (light)",
+    "noise_overlay": "Grainy ambient texture overlay with opacity-5 pointer-events-none to eliminate digital flatness",
+    "ambient_glow": "Radial gradient blur effects behind high-res images and spatial map nodes",
+    "cursor_viewfinder": "Custom interactive cursor with coordinate readouts or camera aperture ring effect on hover"
+  },
+  "motion_and_interactions": {
+    "scrollytelling": "Smooth momentum scrolling via Lenis, parallax camera zoom on scroll",
+    "spatial_transitions": "Framer motion scale-up layout transitions from thumbnail to spatial fullscreen viewer",
+    "hover_previews": "Video reel hover plays muted video snippet, photography hover shifts depth of field / scale",
+    "map_camera_flyto": "Interactive topographical region selection zooms into geographic coordinates smoothly"
+  },
+  "key_features_and_views": {
+    "cinematic_hero": {
+      "description": "One dominant anchor visual with layered misty mountain image, atmospheric soundtrack toggle, quote 'Take a moment to enjoy God's creation', and live camera location metadata",
+      "data_testid": "cinematic-hero-section"
+    },
+    "spatial_map_explorer": {
+      "description": "Interactive Topographical Spatial Map with interactive location nodes (Western Ghats, Spiti Valley, Himalayas, Coastal Kerala, Wayanad, Kaziranga), work count, and region drill-down",
+      "data_testid": "spatial-map-explorer"
+    },
+    "photography_editorial_grid": {
+      "description": "Asymmetric editorial grid with 2-line rich descriptions, EXIF data drawer, spatial zoom viewer with prev/next keyboard/swipe navigation",
+      "data_testid": "photography-archive-grid"
+    },
+    "cinematic_films": {
+      "description": "4K cinematic film showcase with video player modal, spatial soundscapes, ambient canvas glow, and duration badges",
+      "data_testid": "cinematic-films-section"
+    },
+    "vertical_reels": {
+      "description": "9:16 vertical reels player with audio toggle, play/pause controls, captions, and mobile-like card slider",
+      "data_testid": "vertical-reels-feed"
+    },
+    "collections_explorer": {
+      "description": "Curated story collections: Western Ghats, Himalayas, Spiti Valley, Coastal Kerala with region tags and geographic coordinates",
+      "data_testid": "collections-system"
+    },
+    "stories_journal": {
+      "description": "Photographer's journal/field notes detailing journeys, weather conditions, sacred moments, and percussion rhythms in nature",
+      "data_testid": "stories-journal-section"
+    },
+    "about_ricky": {
+      "description": "Editorial biography highlighting dual identity as Nature Visualist & Percussionist, philosophy, equipment loadout, and percussion instruments",
+      "data_testid": "about-ricky-section"
+    },
+    "social_hub": {
+      "description": "Live links and curated media cards for Instagram @rickysuhas, YouTube @Rickysuhas0110, and Facebook",
+      "data_testid": "social-hub-section"
+    },
+    "admin_studio": {
+      "description": "Full-featured Admin CMS Dashboard with authentication (admin@rickysuhas.com / RickySuhas2026!), drag-and-drop single & bulk media upload, metadata batch tagging, published/draft status, place/collection manager, and site settings edit",
+      "data_testid": "admin-studio-cms"
+    }
+  },
+  "image_urls": {
+    "hero_anchor": "https://images.unsplash.com/photo-1675702662605-57e37a8cb2c3?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "foggy_forest": "https://images.unsplash.com/photo-1632307941173-5d541ea1d940?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "aerial_mist": "https://images.unsplash.com/photo-1511884642898-4c92249e20b6?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "mountain_clouds": "https://images.unsplash.com/photo-1760368799560-8e9c32c77223?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "sunset_peaks": "https://images.unsplash.com/photo-1784813490715-9b346c61b2ee?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "snowy_himalaya": "https://images.unsplash.com/photo-1775755276316-ced9bfc24bb0?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "percussionist_artist": "https://images.unsplash.com/photo-1549223565-49541e8416dc?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "stage_drums": "https://images.unsplash.com/photo-1588032786045-59cefda005c0?crop=entropy&cs=srgb&fm=jpg&q=85"
+  },
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Ensure all interactive and key elements contain data-testid attributes for testing.",
+    "Do not use transparent header backgrounds without backdrop filter blur.",
+    "Always provide both light and dark modes with a smooth switcher in header/navigation.",
+    "Use exact admin credentials in pre-seeded database/state: admin@rickysuhas.com / RickySuhas2026!.",
+    "Incorporate 2-line descriptive captions for photography viewer as requested in problem statement.",
+    "Ensure spatial keyboard and swipe navigation work for full-screen photo modal."
+  ]
+}
